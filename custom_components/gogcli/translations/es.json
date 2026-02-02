@@ -10,9 +10,9 @@
       },
       "auth": {
         "data": {
-          "auth_code": "Código de autorización"
+          "auth_code": "Código de autorización (o URL de redirección completa)"
         },
-        "description": "Visita la siguiente URL para autorizar la aplicación:\n\n[Enlace de autorización]({url})\n\nDespués de autorizar, copia el código proporcionado y pégalo a continuación.\n\n**Nota:** Si la redirección falla, mira la URL en tu barra de direcciones. Copia el texto después de `code=` y pégalo aquí."
+        "description": "Visita la siguiente URL para autorizar la aplicación:\n\n[Enlace de autorización]({url})\n\nDespués de autorizar, copia el código proporcionado y pégalo a continuación.\n\n**Nota:** Si la redirección falla, simplemente copia la **URL completa** de tu barra de direcciones y pégala aquí."
       }
     },
     "options": {

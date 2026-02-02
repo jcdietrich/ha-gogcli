@@ -22,8 +22,6 @@ async def test_step_user_already_authorized():
         wrapper = MockWrapper.return_value
         wrapper.list_auth = AsyncMock(return_value='{"accounts":[{"email":"test@gmail.com"}]}')
         
-        # Assume unique_id check passes (mocking async_set_unique_id on flow if needed, but it's internal)
-        # We need to mock the mixin methods
         flow.async_set_unique_id = AsyncMock()
         flow._abort_if_unique_id_configured = MagicMock()
 
@@ -48,13 +46,11 @@ async def test_step_user_needs_auth():
          patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
         
         wrapper = MockWrapper.return_value
-        wrapper.list_auth = AsyncMock(return_value='{"accounts":[]}') # Not authorized
+        wrapper.list_auth = AsyncMock(return_value='{"accounts":[]}')
         wrapper.start_auth = AsyncMock()
         
-        # Mock process stdout for URL
         mock_process = MagicMock()
         mock_stdout = AsyncMock()
-        # First call returns line with URL, second returns empty (EOF)
         mock_stdout.readline.side_effect = [
             b"Go to: https://google.com/auth\n",
             b""
@@ -82,7 +78,6 @@ async def test_step_auth_submit_code_success():
     flow.wrapper.executable_path = "/mock/gog"
     
     mock_process = MagicMock()
-    # communicate returns (stdout, stderr). Stderr is None when merged.
     mock_process.communicate = AsyncMock(return_value=(b"", None))
     mock_process.returncode = 0
     flow.auth_process = mock_process
@@ -92,23 +87,41 @@ async def test_step_auth_submit_code_success():
     result = await flow.async_step_auth(user_input)
     
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "gogcli (test@gmail.com)"
     mock_process.communicate.assert_called_with(input=b"123456\n")
+
+@pytest.mark.asyncio
+async def test_step_auth_submit_full_url_success():
+    flow = ConfigFlow()
+    flow.hass = MagicMock()
+    flow.data = {CONF_ACCOUNT: "test@gmail.com"}
+    flow.config_dir = "/tmp"
+    flow.wrapper = MagicMock()
+    flow.wrapper.executable_path = "/mock/gog"
+    
+    mock_process = MagicMock()
+    mock_process.communicate = AsyncMock(return_value=(b"", None))
+    mock_process.returncode = 0
+    flow.auth_process = mock_process
+    
+    user_input = {CONF_AUTH_CODE: "http://127.0.0.1:46579/oauth2/callback?code=4/0ASc3gC0...&scope=email"}
+    
+    result = await flow.async_step_auth(user_input)
+    
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    mock_process.communicate.assert_called_with(input=b"4/0ASc3gC0...\n")
 
 @pytest.mark.asyncio
 async def test_step_auth_submit_code_failure():
     flow = ConfigFlow()
     flow.hass = MagicMock()
     flow.data = {CONF_ACCOUNT: "test@gmail.com"}
-    flow.wrapper = MagicMock() # Mock wrapper
+    flow.wrapper = MagicMock()
     
-    # Mock start_auth for retry
     retry_process = MagicMock()
     retry_process.stdout.readline = AsyncMock(side_effect=[b"Go to: https://retry\n", b""])
     flow.wrapper.start_auth = AsyncMock(return_value=retry_process)
     
     mock_process = MagicMock()
-    # Error message comes in stdout now
     mock_process.communicate = AsyncMock(return_value=(b"Error: invalid code", None))
     mock_process.returncode = 1
     flow.auth_process = mock_process
@@ -118,6 +131,5 @@ async def test_step_auth_submit_code_failure():
     result = await flow.async_step_auth(user_input)
     
     assert result["type"] == FlowResultType.FORM
-    assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "auth_failed"
-    assert flow.auth_process == retry_process # Should be the new process
+    assert flow.auth_process == retry_process

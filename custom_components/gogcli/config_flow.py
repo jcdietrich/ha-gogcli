@@ -120,9 +120,16 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         
         if user_input is not None:
+            # Extract code if user pasted full URL
+            code_input = user_input[CONF_AUTH_CODE].strip()
+            if "code=" in code_input:
+                match = re.search(r'code=([^&]+)', code_input)
+                if match:
+                    code_input = match.group(1)
+            
             # Send code to process
             if self.auth_process:
-                code = user_input[CONF_AUTH_CODE] + "\n"
+                code = code_input + "\n"
                 stdout, stderr = await self.auth_process.communicate(input=code.encode())
                 
                 if self.auth_process.returncode == 0:

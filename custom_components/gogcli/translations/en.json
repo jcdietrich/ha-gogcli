@@ -10,9 +10,9 @@
       },
       "auth": {
         "data": {
-          "auth_code": "Authorization Code"
+          "auth_code": "Authorization Code (or full redirect URL)"
         },
-        "description": "Please visit the following URL to authorize the application:\n\n[Authorization Link]({url})\n\nAfter authorizing, copy the code provided and paste it below.\n\n**Note:** If the browser redirection fails (site can't be reached), look at the URL in your address bar. Copy the text after `code=` and paste it here."
+        "description": "Please visit the following URL to authorize the application:\n\n[Authorization Link]({url})\n\nAfter authorizing, copy the code provided and paste it below.\n\n**Note:** If the browser redirection fails (site can't be reached), simply copy the **entire URL** from your browser's address bar and paste it here."
       }
     },
     "options": {
