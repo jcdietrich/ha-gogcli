@@ -183,6 +183,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.auth_url = url
 
+        _LOGGER.debug("Showing auth form with URL length: %d", len(self.auth_url))
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema({vol.Required(CONF_AUTH_CODE): str}),
