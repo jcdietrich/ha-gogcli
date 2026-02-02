@@ -10,9 +10,9 @@
       },
       "auth": {
         "data": {
-          "auth_code": "Authorization Code (or full redirect URL)"
+          "auth_code": "Code"
         },
-        "description": "Please visit the authorization URL to grant access.\n\n**Action Required:** Because you are accessing Home Assistant via an external URL, the link may be blocked for security. To ensure success, we have printed the URL to your **Home Assistant Logs**.\n\n1. Go to **Settings > System > Logs**.\n2. Find the entry: `Gogcli Authorization URL: https://...` (it will be highlighted as an error).\n3. Copy that URL and visit it in a browser.\n4. Paste the resulting code (or the full failed redirect URL) below."
+        "description": "Enter the code."
       }
     },
     "options": {
