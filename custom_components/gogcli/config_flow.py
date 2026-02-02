@@ -136,6 +136,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         
         if user_input is not None:
+            # Cancel drain task before interacting with process
+            if self._drain_task and not self._drain_task.done():
+                self._drain_task.cancel()
+                try:
+                    await self._drain_task
+                except asyncio.CancelledError:
+                    pass
+            self._drain_task = None
+
             # Extract code if user pasted full URL
             code_input = user_input[CONF_AUTH_CODE].strip()
             if "code=" in code_input:

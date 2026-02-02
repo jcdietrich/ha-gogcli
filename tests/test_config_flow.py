@@ -65,6 +65,7 @@ async def test_step_user_needs_auth():
         
         assert result["type"] == FlowResultType.FORM
         assert result["step_id"] == "auth"
+        assert result.get("description_placeholders") is None
         assert flow.auth_process == mock_process
 
 @pytest.mark.asyncio
