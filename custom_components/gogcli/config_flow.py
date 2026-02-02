@@ -49,6 +49,22 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.auth_process: asyncio.subprocess.Process | None = None
         self.config_dir: str | None = None
         self.data: dict[str, Any] = {}
+        self._drain_task: asyncio.Task | None = None
+
+    async def _drain_stdout(self):
+        """Drain process stdout to prevent buffer blocking."""
+        if not self.auth_process or not self.auth_process.stdout:
+            return
+        
+        try:
+            while True:
+                line = await self.auth_process.stdout.readline()
+                if not line:
+                    break
+                # Log strictly for debug, but otherwise discard
+                _LOGGER.debug("gogcli drained: %s", line.strip())
+        except Exception:
+            pass
 
     @staticmethod
     @callback
@@ -181,7 +197,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
             self.auth_url = url
             _LOGGER.error("Gogcli Authorization URL: %s", url)
+            
+            # Start draining stdout in background
+            self._drain_task = self.hass.async_create_task(self._drain_stdout())
 
+        _LOGGER.debug("Showing auth form (URL in logs)")
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema({vol.Required(CONF_AUTH_CODE): str}),
