@@ -3,7 +3,7 @@
   "name": "gogcli",
   "codeowners": [],
   "config_flow": true,
-  "documentation": "https://github.com/steipete/gogcli",
+  "documentation": "https://github.com/jcdietrich/ha-gogcli",
   "integration_type": "service",
   "iot_class": "cloud_polling",
   "requirements": [],
