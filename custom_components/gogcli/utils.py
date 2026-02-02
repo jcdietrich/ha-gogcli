@@ -238,7 +238,7 @@ class GogWrapper:
             
         return await asyncio.create_subprocess_exec(
             self.executable_path,
-            "auth", "add", account,
+            "auth", "add", account, "--services", "gmail",
             env=env,
             stdin=asyncio.subprocess.PIPE,
             stdout=asyncio.subprocess.PIPE,
