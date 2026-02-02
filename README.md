@@ -1,4 +1,5 @@
 # gogcli for Home Assistant
+<img src="https://raw.githubusercontent.com/jcdietrich/ha-gogcli/refs/heads/main/logo.png" width="100" />
 
 This integration uses [gogcli](https://github.com/steipete/gogcli?tab=readme-ov-file) to currently allow you to:
 
