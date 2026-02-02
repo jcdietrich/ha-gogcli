@@ -20,7 +20,10 @@ async def test_services_registration_and_calls():
     entry.async_on_unload = MagicMock()
     
     # Mock coordinator setup
-    with patch("custom_components.gogcli.GogGmailCoordinator") as MockCoordinator:
+    with patch("custom_components.gogcli.GogGmailCoordinator") as MockCoordinator, \
+         patch("custom_components.gogcli.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.check_binary", return_value="1.0.0"):
+        
         coordinator_instance = MockCoordinator.return_value
         coordinator_instance.async_config_entry_first_refresh = AsyncMock()
         coordinator_instance.async_request_refresh = AsyncMock()

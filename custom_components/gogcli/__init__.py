@@ -12,7 +12,7 @@ from homeassistant.helpers import config_validation as cv
 
 from .const import DOMAIN, CONF_CONFIG_DIR
 from .coordinator import GogGmailCoordinator
-from .utils import sync_config
+from .utils import sync_config, check_binary, install_binary, get_binary_path
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,6 +23,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up gogcli from a config entry."""
 
     hass.data.setdefault(DOMAIN, {})
+
+    # Ensure binary exists
+    gog_path = get_binary_path(hass)
+    if not await check_binary(gog_path):
+        try:
+            await install_binary(hass)
+        except Exception as err:
+            _LOGGER.error("Failed to install gogcli during setup: %s", err)
+            return False
 
     # Sync YAML config
     if config_dir := entry.data.get(CONF_CONFIG_DIR):

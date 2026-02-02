@@ -18,6 +18,8 @@ async def test_yaml_sync_on_setup():
     
     with patch("custom_components.gogcli.GogGmailCoordinator") as MockCoordinator, \
          patch("custom_components.gogcli.sync_config") as mock_sync_config, \
+         patch("custom_components.gogcli.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.check_binary", return_value="1.0.0"), \
          patch("custom_components.gogcli.setup_services"): # Avoid re-registering services
         
         coordinator = MockCoordinator.return_value

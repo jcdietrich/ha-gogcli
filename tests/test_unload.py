@@ -15,7 +15,10 @@ async def test_unload_entry():
     entry.data = {"gog_path": "gog", "config_dir": "/tmp"}
     
     # Setup
-    with patch("custom_components.gogcli.GogGmailCoordinator") as MockCoordinator:
+    with patch("custom_components.gogcli.GogGmailCoordinator") as MockCoordinator, \
+         patch("custom_components.gogcli.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.check_binary", return_value="1.0.0"):
+        
         coordinator = MockCoordinator.return_value
         coordinator.async_config_entry_first_refresh = AsyncMock()
         await async_setup_entry(hass, entry)
