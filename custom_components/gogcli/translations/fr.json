@@ -12,7 +12,7 @@
         "data": {
           "auth_code": "Code d'autorisation (ou URL de redirection complète)"
         },
-        "description": "Veuillez visiter l'URL suivante pour autoriser l'application :\n\n[Lien d'autorisation]({url})\n\nAprès autorisation, copiez le code fourni et collez-le ci-dessous.\n\n**Note :** Si la redirection échoue, copiez simplement l'**URL complète** depuis votre barre d'adresse et collez-la ici."
+        "description": "Veuillez visiter l'URL suivante pour autoriser l'application :\n\n{url}\n\nAprès autorisation, copiez le code fourni et collez-le ci-dessous.\n\n**Note :** Si la redirection échoue, copiez simplement l'**URL complète** depuis votre barre d'adresse et collez-la ici."
       }
     },
     "options": {
