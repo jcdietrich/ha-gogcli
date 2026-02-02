@@ -1,4 +1,4 @@
-# gogcli (gogcli) for Home Assistant
+# gogcli for Home Assistant
 
 This integration uses [gogcli](https://github.com/steipete/gogcli?tab=readme-ov-file) to currently allow you to:
 

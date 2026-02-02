@@ -1,6 +1,6 @@
 {
   "domain": "gogcli",
-  "name": "gogcli",
+  "name": "gogcli for Home Assistant",
   "codeowners": [],
   "config_flow": true,
   "documentation": "https://github.com/jcdietrich/ha-gogcli",
