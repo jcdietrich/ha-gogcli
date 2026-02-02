@@ -12,7 +12,7 @@
         "data": {
           "auth_code": "Authorization Code (or full redirect URL)"
         },
-        "description": "Please visit the following URL to authorize the application:\n\n{url}\n\nAfter authorizing, copy the code provided and paste it below.\n\n**Note:** If the browser redirection fails (site can't be reached), simply copy the **entire URL** from your browser's address bar and paste it here."
+        "description": "Please visit the following URL to authorize the application:\n\n`{url}`\n\nAfter authorizing, copy the code provided and paste it below.\n\n**Note:** If the browser redirection fails (site can't be reached), simply copy the **entire URL** from your browser's address bar and paste it here."
       }
     },
     "options": {

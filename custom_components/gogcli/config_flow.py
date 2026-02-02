@@ -169,7 +169,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         match = re.search(r'(https://[^\s]+)', clean_line)
                         if match:
                             url = match.group(1)
-                            _LOGGER.debug("Found auth URL: %s", url)
+                            _LOGGER.debug("Found auth URL: %s", repr(url))
                             break
             except asyncio.TimeoutError:
                 _LOGGER.error("Timed out waiting for auth URL")
