@@ -82,8 +82,8 @@ async def test_step_auth_submit_code_success():
     flow.wrapper.executable_path = "/mock/gog"
     
     mock_process = MagicMock()
-    # communicate returns (stdout, stderr)
-    mock_process.communicate = AsyncMock(return_value=(b"", b""))
+    # communicate returns (stdout, stderr). Stderr is None when merged.
+    mock_process.communicate = AsyncMock(return_value=(b"", None))
     mock_process.returncode = 0
     flow.auth_process = mock_process
     
@@ -108,7 +108,8 @@ async def test_step_auth_submit_code_failure():
     flow.wrapper.start_auth = AsyncMock(return_value=retry_process)
     
     mock_process = MagicMock()
-    mock_process.communicate = AsyncMock(return_value=(b"", b"Error: invalid code"))
+    # Error message comes in stdout now
+    mock_process.communicate = AsyncMock(return_value=(b"Error: invalid code", None))
     mock_process.returncode = 1
     flow.auth_process = mock_process
     

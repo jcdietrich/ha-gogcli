@@ -130,7 +130,10 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data={**self.data, CONF_GOG_PATH: self.wrapper.executable_path, CONF_CONFIG_DIR: self.config_dir}
                     )
                 else:
-                    _LOGGER.error("Auth failed: %s", stderr.decode())
+                    error_msg = stdout.decode() if stdout else "Unknown error"
+                    if stderr:
+                        error_msg += f" {stderr.decode()}"
+                    _LOGGER.error("Auth failed: %s", error_msg)
                     errors["base"] = "auth_failed"
                     self.auth_process = None # Reset to try again
             else:
@@ -144,11 +147,12 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             url = None
             try:
                 while True:
-                    # Wait max 10 seconds for output
-                    line = await asyncio.wait_for(self.auth_process.stdout.readline(), timeout=10.0)
+                    # Wait max 30 seconds for output
+                    line = await asyncio.wait_for(self.auth_process.stdout.readline(), timeout=30.0)
                     if not line:
                         break
                     decoded = line.decode().strip()
+                    _LOGGER.debug("gogcli auth output: %s", decoded)
                     if "https://" in decoded:
                         match = re.search(r'(https://[^\s]+)', decoded)
                         if match:
