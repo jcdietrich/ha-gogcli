@@ -50,6 +50,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.config_dir: str | None = None
         self.data: dict[str, Any] = {}
         self._drain_task: asyncio.Task | None = None
+        self._proc_output: list[str] = []
 
     async def _drain_stdout(self):
         """Drain process stdout to prevent buffer blocking."""
@@ -61,8 +62,9 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 line = await self.auth_process.stdout.readline()
                 if not line:
                     break
-                # Log strictly for debug, but otherwise discard
-                _LOGGER.debug("gogcli drained: %s", line.strip())
+                decoded = line.decode().strip()
+                self._proc_output.append(decoded)
+                _LOGGER.debug("gogcli drained: %s", decoded)
         except Exception:
             pass
 
@@ -136,15 +138,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         
         if user_input is not None:
-            # Cancel drain task before interacting with process
-            if self._drain_task and not self._drain_task.done():
-                self._drain_task.cancel()
-                try:
-                    await self._drain_task
-                except asyncio.CancelledError:
-                    pass
-            self._drain_task = None
-
             # Extract code if user pasted full URL
             code_input = user_input[CONF_AUTH_CODE].strip()
             if "code=" in code_input:
@@ -155,7 +148,26 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             # Send code to process
             if self.auth_process:
                 code = code_input + "\n"
-                stdout, stderr = await self.auth_process.communicate(input=code.encode())
+                
+                try:
+                    if self.auth_process.stdin:
+                        self.auth_process.stdin.write(code.encode())
+                        await self.auth_process.stdin.drain()
+                        self.auth_process.stdin.close()
+                    
+                    # Wait for exit
+                    await self.auth_process.wait()
+                except Exception as err:
+                    _LOGGER.error("Failed to write to process: %s", err)
+
+                # Stop drainer
+                if self._drain_task:
+                    self._drain_task.cancel()
+                    try:
+                        await self._drain_task
+                    except asyncio.CancelledError:
+                        pass
+                    self._drain_task = None
                 
                 if self.auth_process.returncode == 0:
                      return self.async_create_entry(
@@ -163,12 +175,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data={**self.data, CONF_GOG_PATH: self.wrapper.executable_path, CONF_CONFIG_DIR: self.config_dir}
                     )
                 else:
-                    error_msg = stdout.decode() if stdout else "Unknown error"
-                    if stderr:
-                        error_msg += f" {stderr.decode()}"
-                    _LOGGER.error("Auth failed: %s", error_msg)
+                    error_msg = " ".join(self._proc_output[-5:]) # Last 5 lines
+                    _LOGGER.error("Auth failed. Output: %s", error_msg)
                     errors["base"] = "auth_failed"
                     self.auth_process = None # Reset to try again
+                    self._proc_output = []
             else:
                  errors["base"] = "process_lost"
 

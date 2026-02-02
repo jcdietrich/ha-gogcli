@@ -78,8 +78,14 @@ async def test_step_auth_submit_code_success():
     flow.wrapper.executable_path = "/mock/gog"
     
     mock_process = MagicMock()
-    mock_process.communicate = AsyncMock(return_value=(b"", None))
+    # Mock manual interaction methods
+    mock_process.stdin = MagicMock()
+    mock_process.stdin.write = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdin.close = MagicMock()
+    mock_process.wait = AsyncMock()
     mock_process.returncode = 0
+    
     flow.auth_process = mock_process
     
     user_input = {CONF_AUTH_CODE: "123456"}
@@ -87,7 +93,9 @@ async def test_step_auth_submit_code_success():
     result = await flow.async_step_auth(user_input)
     
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    mock_process.communicate.assert_called_with(input=b"123456\n")
+    assert result["title"] == "gogcli (test@gmail.com)"
+    mock_process.stdin.write.assert_called_with(b"123456\n")
+    mock_process.wait.assert_called()
 
 @pytest.mark.asyncio
 async def test_step_auth_submit_full_url_success():
@@ -99,16 +107,24 @@ async def test_step_auth_submit_full_url_success():
     flow.wrapper.executable_path = "/mock/gog"
     
     mock_process = MagicMock()
-    mock_process.communicate = AsyncMock(return_value=(b"", None))
+    mock_process.stdin = MagicMock()
+    mock_process.stdin.write = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdin.close = MagicMock()
+    mock_process.wait = AsyncMock()
     mock_process.returncode = 0
+    
     flow.auth_process = mock_process
     
+    # Simulate user pasting full URL
     user_input = {CONF_AUTH_CODE: "http://127.0.0.1:46579/oauth2/callback?code=4/0ASc3gC0...&scope=email"}
     
     result = await flow.async_step_auth(user_input)
     
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    mock_process.communicate.assert_called_with(input=b"4/0ASc3gC0...\n")
+    # Ensure extracted code is sent
+    mock_process.stdin.write.assert_called_with(b"4/0ASc3gC0...\n")
+    mock_process.wait.assert_called()
 
 @pytest.mark.asyncio
 async def test_step_auth_submit_code_failure():
@@ -122,9 +138,16 @@ async def test_step_auth_submit_code_failure():
     flow.wrapper.start_auth = AsyncMock(return_value=retry_process)
     
     mock_process = MagicMock()
-    mock_process.communicate = AsyncMock(return_value=(b"Error: invalid code", None))
+    mock_process.stdin = MagicMock()
+    mock_process.stdin.write = MagicMock()
+    mock_process.stdin.drain = AsyncMock()
+    mock_process.stdin.close = MagicMock()
+    mock_process.wait = AsyncMock()
     mock_process.returncode = 1
+    
     flow.auth_process = mock_process
+    # Populate buffer manually since we don't run _drain_stdout in this unit test
+    flow._proc_output = ["Error: invalid code"]
     
     user_input = {CONF_AUTH_CODE: "wrong"}
     
