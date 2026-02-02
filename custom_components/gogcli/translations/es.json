@@ -6,7 +6,7 @@
           "account": "Cuenta de Google (Correo electrónico)",
           "credentials_file": "Archivo JSON de credenciales OAuth (ruta o nombre de archivo en config/)"
         },
-        "description": "Introduce el correo electrónico de tu cuenta de Google. Opcionalmente, puedes proporcionar la ruta a tu archivo `credentials.json`."
+        "description": "Introduce el correo electrónico de tu cuenta de Google y la ruta a tu archivo `credentials.json`."
       },
       "auth": {
         "data": {

@@ -6,7 +6,7 @@
           "account": "Compte Google (Email)",
           "credentials_file": "Fichier JSON d'identifiants OAuth (chemin ou nom de fichier dans config/)"
         },
-        "description": "Entrez l'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`."
+        "description": "Entrez l'e-mail de votre compte Google et le chemin vers votre fichier `credentials.json`."
       },
       "auth": {
         "data": {

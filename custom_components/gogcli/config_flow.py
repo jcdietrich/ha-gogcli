@@ -34,7 +34,7 @@ _LOGGER = logging.getLogger(__name__)
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCOUNT): str,
-        vol.Optional(CONF_CREDENTIALS_FILE): str,
+        vol.Required(CONF_CREDENTIALS_FILE): str,
     }
 )
 
