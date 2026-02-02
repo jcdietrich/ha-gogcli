@@ -142,23 +142,27 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             
             # Read stdout line by line until we find the URL
             url = None
-            while True:
-                line = await self.auth_process.stdout.readline()
-                if not line:
-                    break
-                decoded = line.decode().strip()
-                if "https://" in decoded:
-                    # Simple extraction, gogcli prints "Go to the following link in your browser:" then the link
-                    match = re.search(r'(https://[^\s]+)', decoded)
-                    if match:
-                        url = match.group(1)
+            try:
+                while True:
+                    # Wait max 10 seconds for output
+                    line = await asyncio.wait_for(self.auth_process.stdout.readline(), timeout=10.0)
+                    if not line:
                         break
+                    decoded = line.decode().strip()
+                    if "https://" in decoded:
+                        match = re.search(r'(https://[^\s]+)', decoded)
+                        if match:
+                            url = match.group(1)
+                            break
+            except asyncio.TimeoutError:
+                _LOGGER.error("Timed out waiting for auth URL")
             
             if not url:
                 errors["base"] = "url_not_found"
-                self.auth_process.kill()
+                if self.auth_process.returncode is None:
+                    self.auth_process.kill()
                 self.auth_process = None
-                return self.async_show_form(step_id="user", errors=errors)
+                return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
 
             self.auth_url = url
 
