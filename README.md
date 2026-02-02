@@ -1,6 +1,15 @@
-# Google Gmail (gogcli) for Home Assistant
+# gogcli (gogcli) for Home Assistant
 
-This integration allows you to monitor your Gmail inbox using the `gogcli` tool. It provides sensors for your recent emails and allows you to retrieve thread details.
+This integration uses [gogcli](https://github.com/steipete/gogcli?tab=readme-ov-file) to currently allow you to:
+
+  * Gmail
+    * supports multiple accounts
+    * monitor your Gmail inbox
+    * provides sensors
+      * get your recent emails, updating the sensors
+      * retrieve thread details
+    * provides yaml, on this page, to create a card for your dashboard
+      showing info about your recent email
 
 ## Installation
 
