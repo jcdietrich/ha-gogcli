@@ -1,0 +1,31 @@
+update_gmail:
+  name: Update Gmail
+  description: Force an update of Gmail sensors for one or more accounts.
+  fields:
+    config_entry_ids:
+      name: Config Entry IDs
+      description: List of configuration entry IDs to update. If empty, all accounts will be updated.
+      required: false
+      selector:
+        config_entry:
+          integration: gogcli
+          multiple: true
+get_thread:
+  name: Get Thread
+  description: Retrieve metadata and snippets for a specific thread ID from a specific account.
+  fields:
+    config_entry_id:
+      name: Config Entry ID
+      description: The configuration entry ID to use.
+      required: true
+      selector:
+        config_entry:
+          integration: gogcli
+    thread_id:
+      name: Thread ID
+      description: The ID of the thread to retrieve.
+      required: true
+      selector:
+        text:
+  response:
+    optional: false

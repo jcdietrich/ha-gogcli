@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "account": "Cuenta de Google (Correo electrónico)",
+          "credentials_file": "Archivo JSON de credenciales OAuth (ruta o nombre de archivo en config/)",
+          "gog_path": "Ruta al binario gogcli"
+        },
+        "description": "Introduce el correo electrónico de tu cuenta de Google. Opcionalmente, puedes proporcionar la ruta a tu archivo `credentials.json`. Nota: Aún necesitas autorizar la cuenta ejecutando el comando mostrado si falla."
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "menu_options": {
+            "polling": "Configurar Intervalo de Consulta",
+            "dashboard_yaml": "Obtener YAML de la Tarjeta del Panel"
+          }
+        },
+        "polling": {
+          "data": {
+            "polling_interval": "Intervalo de consulta (minutos)"
+          }
+        },
+        "dashboard_yaml": {
+          "title": "YAML de la Tarjeta del Panel",
+          "description": "Copia el YAML a continuación y pégalo en una tarjeta **Markdown** en tu panel:\n\n```yaml\n{card_yaml}\n```"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Error al ejecutar gogcli. Verifica la ruta y los permisos.",
+      "account_not_authorized": "Cuenta no autorizada. Consulta los registros para el comando a ejecutar.",
+      "credentials_file_not_found": "Archivo de credenciales no encontrado. Verifica la ruta.",
+      "unknown": "Ocurrió un error inesperado."
+    },
+    "abort": {
+      "already_configured": "La cuenta ya está configurada"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "gmail_last_update": {
+        "name": "Última actualización de Gmail"
+      },
+      "gmail_email": {
+        "name": "Correo electrónico de Gmail {index}"
+      }
+    }
+  },
+  "services": {
+    "update_gmail": {
+      "name": "Actualizar Gmail",
+      "description": "Forzar una actualización de los sensores de Gmail para una o más cuentas.",
+      "fields": {
+        "config_entry_ids": {
+          "name": "IDs de entrada de configuración",
+          "description": "Lista de IDs de entrada de configuración para actualizar. Si está vacío, se actualizarán todas las cuentas."
+        }
+      }
+    },
+    "get_thread": {
+      "name": "Obtener hilo",
+      "description": "Recuperar metadatos y fragmentos para un ID de hilo específico de una cuenta específica.",
+      "fields": {
+        "config_entry_id": {
+          "name": "ID de entrada de configuración",
+          "description": "El ID de la entrada de configuración a utilizar."
+        },
+        "thread_id": {
+          "name": "ID del hilo",
+          "description": "El ID del hilo a recuperar."
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "account": "Compte Google (Email)",
+          "credentials_file": "Fichier JSON d\'identifiants OAuth (chemin ou nom de fichier dans config/)",
+          "gog_path": "Chemin vers l\'exécutable gogcli"
+        },
+        "description": "Entrez l\'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`. Remarque : vous devez toujours autoriser le compte en exécutant la commande affichée en cas d\'échec."
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "menu_options": {
+            "polling": "Configurer la fréquence de mise à jour",
+            "dashboard_yaml": "Obtenir le YAML de la carte du tableau de bord"
+          }
+        },
+        "polling": {
+          "data": {
+            "polling_interval": "Intervalle de mise à jour (minutes)"
+          }
+        },
+        "dashboard_yaml": {
+          "title": "YAML de la carte du tableau de bord",
+          "description": "Copiez le YAML ci-dessous et collez-le dans une carte **Markdown** de votre tableau de bord :\n\n```yaml\n{card_yaml}\n```"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Échec de l\'exécution de gogcli. Vérifiez le chemin et les permissions.",
+      "account_not_authorized": "Compte non autorisé. Consultez les journaux pour la commande à exécuter.",
+      "credentials_file_not_found": "Fichier d\'identifiants introuvable. Vérifiez le chemin.",
+      "unknown": "Une erreur inattendue s\'est produite."
+    },
+    "abort": {
+      "already_configured": "Le compte est déjà configuré"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "gmail_last_update": {
+        "name": "Dernière mise à jour Gmail"
+      },
+      "gmail_email": {
+        "name": "E-mail Gmail {index}"
+      }
+    }
+  },
+  "services": {
+    "update_gmail": {
+      "name": "Mettre à jour Gmail",
+      "description": "Force une mise à jour des capteurs Gmail pour un ou plusieurs comptes.",
+      "fields": {
+        "config_entry_ids": {
+          "name": "IDs des entrées de configuration",
+          "description": "Liste des identifiants d'entrée de configuration à mettre à jour. Si vide, tous les comptes seront mis à jour."
+        }
+      }
+    },
+    "get_thread": {
+      "name": "Obtenir le fil de discussion",
+      "description": "Récupère les métadonnées et les extraits d'un ID de fil spécifique à partir d'un compte spécifique.",
+      "fields": {
+        "config_entry_id": {
+          "name": "ID de l'entrée de configuration",
+          "description": "L'identifiant de l'entrée de configuration à utiliser."
+        },
+        "thread_id": {
+          "name": "ID du fil",
+          "description": "L'identifiant du fil de discussion à récupérer."
+        }
+      }
+    }
+  }
+}

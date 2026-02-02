@@ -1,0 +1,78 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "data": {
+          "account": "Google Account (Email)",
+          "credentials_file": "OAuth Credentials JSON file (path or filename in config/)",
+          "gog_path": "Path to gogcli binary"
+        },
+        "description": "Enter your Google account email. You can optionally provide the path to your `credentials.json` file. Note: You still need to authorize the account by running the command shown if it fails."
+      }
+    },
+    "options": {
+      "step": {
+        "init": {
+          "menu_options": {
+            "polling": "Configure Polling",
+            "dashboard_yaml": "Get Dashboard Card YAML"
+          }
+        },
+        "polling": {
+          "data": {
+            "polling_interval": "Polling Interval (minutes)"
+          }
+        },
+        "dashboard_yaml": {
+          "title": "Dashboard Card YAML",
+          "description": "Copy the YAML below and paste it into a **Markdown** card in your dashboard:\n\n```yaml\n{card_yaml}\n```"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to execute gogcli. Check the path and permissions.",
+      "account_not_authorized": "Account not authorized. See logs for command to run.",
+      "credentials_file_not_found": "Credentials file not found. Check the path.",
+      "unknown": "Unexpected error occurred."
+    },
+    "abort": {
+      "already_configured": "Account is already configured"
+    }
+  },
+  "entity": {
+    "sensor": {
+      "gmail_last_update": {
+        "name": "Gmail Last Update"
+      },
+      "gmail_email": {
+        "name": "Gmail Email {index}"
+      }
+    }
+  },
+  "services": {
+    "update_gmail": {
+      "name": "Update Gmail",
+      "description": "Force an update of Gmail sensors for one or more accounts.",
+      "fields": {
+        "config_entry_ids": {
+          "name": "Config Entry IDs",
+          "description": "List of configuration entry IDs to update. If empty, all accounts will be updated."
+        }
+      }
+    },
+    "get_thread": {
+      "name": "Get Thread",
+      "description": "Retrieve metadata and snippets for a specific thread ID from a specific account.",
+      "fields": {
+        "config_entry_id": {
+          "name": "Config Entry ID",
+          "description": "The configuration entry ID to use."
+        },
+        "thread_id": {
+          "name": "Thread ID",
+          "description": "The ID of the thread to retrieve."
+        }
+      }
+    }
+  }
+}
