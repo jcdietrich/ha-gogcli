@@ -89,7 +89,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         auth_json = await wrapper.list_auth()
         
         if account not in auth_json:
-             _LOGGER.error("Account %s not found in gog auth list", account)
+             _LOGGER.error("Account %s not found in gog auth list. Available: %s", account, auth_json)
              # We should tell the user what to do
              raise AccountNotAuthorized(f"Run `HOME={config_dir} {gog_path} auth add {account}` in terminal")
 
