@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Integration specifics
+custom_components/gogcli/bin/gog
+custom_components/gogcli/bin/gogcli
+.storage/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project temp/debug
+debug_service_call.py
+test_yaml_support.py
+test_download.tar.gz
+test_config_dir/
