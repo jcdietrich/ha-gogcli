@@ -33,7 +33,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_ACCOUNT): str,
         vol.Optional(CONF_CREDENTIALS_FILE): str,
-        vol.Optional(CONF_GOG_PATH): str,
     }
 )
 
@@ -42,27 +41,23 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
-    gog_path = data.get(CONF_GOG_PATH)
     account = data[CONF_ACCOUNT]
     credentials_file = data.get(CONF_CREDENTIALS_FILE)
     
     # Define config directory
     config_dir = hass.config.path(".storage/gogcli")
 
-    # If no path provided, try default or install
-    if not gog_path:
-        default_bin_path = get_binary_path(hass)
-        version = await check_binary(default_bin_path)
-        
-        if version:
-            gog_path = default_bin_path
-        else:
-            # Try to install
-            try:
-                gog_path = await install_binary(hass)
-            except Exception as err:
-                _LOGGER.error("Failed to install gogcli: %s", err)
-                raise CannotConnect
+    # Use default binary path and ensure it's installed
+    gog_path = get_binary_path(hass)
+    version = await check_binary(gog_path)
+    
+    if not version:
+        # Try to install
+        try:
+            gog_path = await install_binary(hass)
+        except Exception as err:
+            _LOGGER.error("Failed to install gogcli: %s", err)
+            raise CannotConnect
 
     # Sync configuration
     await hass.async_add_executor_job(sync_config, hass, config_dir)

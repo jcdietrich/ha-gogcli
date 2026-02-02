@@ -4,8 +4,7 @@
       "user": {
         "data": {
           "account": "Cuenta de Google (Correo electrónico)",
-          "credentials_file": "Archivo JSON de credenciales OAuth (ruta o nombre de archivo en config/)",
-          "gog_path": "Ruta al binario gogcli"
+          "credentials_file": "Archivo JSON de credenciales OAuth (ruta o nombre de archivo en config/)"
         },
         "description": "Introduce el correo electrónico de tu cuenta de Google. Opcionalmente, puedes proporcionar la ruta a tu archivo `credentials.json`. Nota: Aún necesitas autorizar la cuenta ejecutando el comando mostrado si falla."
       }

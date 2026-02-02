@@ -9,11 +9,12 @@ async def test_validate_input_with_credentials_file():
     hass.config.path.side_effect = lambda p: f"/mock/config/{p}"
     data = {
         "account": "test@gmail.com",
-        "credentials_file": "credentials.json",
-        "gog_path": "/existing/gog"
+        "credentials_file": "credentials.json"
     }
 
-    with patch("custom_components.gogcli.config_flow.sync_config"), \
+    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
+         patch("custom_components.gogcli.config_flow.sync_config"), \
          patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper, \
          patch("os.path.exists", return_value=True):
         
@@ -50,16 +51,17 @@ async def test_validate_input_credentials_file_not_found():
             await validate_input(hass, data)
 
 @pytest.mark.asyncio
-async def test_validate_input_success_existing_binary():
+async def test_validate_input_use_existing_binary():
     hass = MagicMock()
     hass.async_add_executor_job = AsyncMock()
     hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
     data = {
-        "account": "test@gmail.com",
-        "gog_path": "/existing/gog"
+        "account": "test@gmail.com"
     }
 
-    with patch("custom_components.gogcli.config_flow.sync_config") as mock_sync, \
+    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/existing/gog"), \
+         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
+         patch("custom_components.gogcli.config_flow.sync_config") as mock_sync, \
          patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
         
         wrapper_instance = MockWrapper.return_value
@@ -122,11 +124,12 @@ async def test_validate_input_auth_failed():
     hass.async_add_executor_job = AsyncMock()
     hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
     data = {
-        "account": "wrong@gmail.com",
-        "gog_path": "gog"
+        "account": "wrong@gmail.com"
     }
 
-    with patch("custom_components.gogcli.config_flow.sync_config"), \
+    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
+         patch("custom_components.gogcli.config_flow.sync_config"), \
          patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
         
         wrapper_instance = MockWrapper.return_value

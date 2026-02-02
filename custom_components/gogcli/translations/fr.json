@@ -4,10 +4,9 @@
       "user": {
         "data": {
           "account": "Compte Google (Email)",
-          "credentials_file": "Fichier JSON d\'identifiants OAuth (chemin ou nom de fichier dans config/)",
-          "gog_path": "Chemin vers l\'exécutable gogcli"
+          "credentials_file": "Fichier JSON d'identifiants OAuth (chemin ou nom de fichier dans config/)"
         },
-        "description": "Entrez l\'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`. Remarque : vous devez toujours autoriser le compte en exécutant la commande affichée en cas d\'échec."
+        "description": "Entrez l'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`. Remarque : vous devez toujours autoriser le compte en exécutant la commande affichée en cas d'échec."
       }
     },
     "options": {
