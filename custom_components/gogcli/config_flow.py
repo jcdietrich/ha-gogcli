@@ -161,10 +161,15 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         break
                     decoded = line.decode().strip()
                     _LOGGER.debug("gogcli auth output: %s", decoded)
-                    if "https://" in decoded:
-                        match = re.search(r'(https://[^\s]+)', decoded)
+                    
+                    # Strip ANSI color codes
+                    clean_line = re.sub(r'\x1b\[[0-9;]*m', '', decoded)
+                    
+                    if "https://" in clean_line:
+                        match = re.search(r'(https://[^\s]+)', clean_line)
                         if match:
                             url = match.group(1)
+                            _LOGGER.debug("Found auth URL: %s", url)
                             break
             except asyncio.TimeoutError:
                 _LOGGER.error("Timed out waiting for auth URL")
