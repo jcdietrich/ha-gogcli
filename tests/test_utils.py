@@ -11,6 +11,11 @@ async def test_install_binary_tar_gz():
     hass = MagicMock()
     hass.config.path.return_value = "/mock/path/custom_components/gogcli/bin/gogcli"
     
+    # Mock async_add_executor_job to run the function synchronously
+    async def mock_exec_job(func, *args):
+        return func(*args)
+    hass.async_add_executor_job.side_effect = mock_exec_job
+    
     # Create a mock tar.gz content
     file_content = b"fake-binary-content"
     tar_stream = io.BytesIO()
@@ -38,6 +43,9 @@ async def test_install_binary_tar_gz():
                 
                 assert path == "/mock/path/custom_components/gogcli/bin/gogcli"
                 mock_makedirs.assert_called_with("/mock/path/custom_components/gogcli/bin", exist_ok=True)
+                
+                # Verify that the sync function was called and did the writing
+                mock_open.assert_called_with("/mock/path/custom_components/gogcli/bin/gogcli", "wb")
                 mock_file.write.assert_called_with(file_content)
                 mock_chmod.assert_called()
 

@@ -69,25 +69,8 @@ def _get_system_info() -> tuple[str, str, str]:
     ext = "zip" if os_name == "windows" else "tar.gz"
     return os_name, arch, ext
 
-async def install_binary(hass: HomeAssistant, version: str = GOGCLI_VERSION) -> str:
-    """Download and install the gogcli binary."""
-    os_name, arch, ext = _get_system_info()
-    url = GITHUB_RELEASE_URL.format(version=version, os=os_name, arch=arch, ext=ext)
-    
-    target_path = get_binary_path(hass)
-    target_dir = os.path.dirname(target_path)
-    os.makedirs(target_dir, exist_ok=True)
-
-    _LOGGER.info("Downloading gogcli from %s", url)
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as response:
-            if response.status != 200:
-                raise RuntimeError(f"Failed to download gogcli: {response.status}")
-            content = await response.read()
-
-    _LOGGER.info("Extracting gogcli to %s", target_path)
-    
+def _install_binary_sync(content: bytes, ext: str, target_path: str) -> None:
+    """Synchronous helper to extract and write binary."""
     if ext == "tar.gz":
         with tarfile.open(fileobj=BytesIO(content), mode="r:gz") as tar:
             binary_member = None
@@ -120,6 +103,27 @@ async def install_binary(hass: HomeAssistant, version: str = GOGCLI_VERSION) -> 
     # Make executable
     st = os.stat(target_path)
     os.chmod(target_path, st.st_mode | stat.S_IEXEC)
+
+async def install_binary(hass: HomeAssistant, version: str = GOGCLI_VERSION) -> str:
+    """Download and install the gogcli binary."""
+    os_name, arch, ext = _get_system_info()
+    url = GITHUB_RELEASE_URL.format(version=version, os=os_name, arch=arch, ext=ext)
+    
+    target_path = get_binary_path(hass)
+    target_dir = os.path.dirname(target_path)
+    os.makedirs(target_dir, exist_ok=True)
+
+    _LOGGER.info("Downloading gogcli from %s", url)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            if response.status != 200:
+                raise RuntimeError(f"Failed to download gogcli: {response.status}")
+            content = await response.read()
+
+    _LOGGER.info("Extracting gogcli to %s", target_path)
+    
+    await hass.async_add_executor_job(_install_binary_sync, content, ext, target_path)
 
     return target_path
 
