@@ -87,6 +87,7 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 # Set credentials if provided
                 if creds := user_input.get(CONF_CREDENTIALS_FILE):
                     full_path = self.hass.config.path(creds) if not os.path.isabs(creds) else creds
+                    _LOGGER.debug("Resolved credentials path: %s", full_path)
                     if not os.path.exists(full_path):
                         raise CredentialsFileNotFound
                     await self.wrapper.set_credentials(full_path)

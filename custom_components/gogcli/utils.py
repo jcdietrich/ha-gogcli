@@ -201,7 +201,7 @@ class GogWrapper:
         return stdout.decode()
 
     async def set_credentials(self, credentials_path: str) -> None:
-        code, _, stderr = await self._run("auth", "credentials", "set", credentials_path)
+        code, _, stderr = await self._run("auth", "credentials", credentials_path)
         if code != 0:
             raise RuntimeError(f"Failed to set credentials: {stderr.decode()}")
 
