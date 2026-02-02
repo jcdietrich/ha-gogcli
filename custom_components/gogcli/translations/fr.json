@@ -12,7 +12,7 @@
         "data": {
           "auth_code": "Code d'autorisation (ou URL de redirection complète)"
         },
-        "description": "Veuillez visiter l'URL suivante pour autoriser l'application :\n\n`{url}`\n\nAprès autorisation, copiez le code fourni et collez-le ci-dessous.\n\n**Note :** Si la redirection échoue, copiez simplement l'**URL complète** depuis votre barre d'adresse et collez-la ici."
+        "description": "Veuillez visiter l'URL d'autorisation pour accorder l'accès.\n\n**Action requise :** Étant donné que vous accédez à Home Assistant via une URL externe, le lien peut être bloqué pour des raisons de sécurité. Pour garantir le succès, nous avons imprimé l'URL dans vos **journaux Home Assistant**.\n\n1. Allez dans **Paramètres > Système > Journaux**.\n2. Trouvez l'entrée : `Gogcli Authorization URL: https://...` (elle sera mise en évidence en tant qu'erreur).\n3. Copiez cette URL et visitez-la dans un navigateur.\n4. Collez le code résultant (ou l'URL de redirection complète ayant échoué) ci-dessous."
       }
     },
     "options": {

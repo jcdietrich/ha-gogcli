@@ -160,7 +160,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     if not line:
                         break
                     decoded = line.decode().strip()
-                    _LOGGER.debug("gogcli auth output: %s", decoded)
                     
                     # Strip ANSI color codes
                     clean_line = re.sub(r'\x1b\[[0-9;]*m', '', decoded)
@@ -169,7 +168,6 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         match = re.search(r'(https://[^\s]+)', clean_line)
                         if match:
                             url = match.group(1)
-                            _LOGGER.debug("Found auth URL: %s", repr(url))
                             break
             except asyncio.TimeoutError:
                 _LOGGER.error("Timed out waiting for auth URL")
@@ -182,12 +180,11 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 return self.async_show_form(step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors)
 
             self.auth_url = url
+            _LOGGER.error("Gogcli Authorization URL: %s", url)
 
-        _LOGGER.debug("Showing auth form with URL length: %d", len(self.auth_url))
         return self.async_show_form(
             step_id="auth",
             data_schema=vol.Schema({vol.Required(CONF_AUTH_CODE): str}),
-            description_placeholders={"url": self.auth_url},
             errors=errors
         )
 
