@@ -1,140 +1,122 @@
 import pytest
 from unittest.mock import MagicMock, patch, AsyncMock
-from custom_components.gogcli.config_flow import validate_input, CannotConnect, AccountNotAuthorized, CredentialsFileNotFound, CONF_GOG_PATH, CONF_CONFIG_DIR, CONF_CREDENTIALS_FILE
+from homeassistant.data_entry_flow import FlowResultType
+from custom_components.gogcli.config_flow import ConfigFlow, CONF_GOG_PATH, CONF_CONFIG_DIR, CONF_CREDENTIALS_FILE, CONF_AUTH_CODE, CONF_ACCOUNT, CredentialsFileNotFound
 
 @pytest.mark.asyncio
-async def test_validate_input_with_credentials_file():
+async def test_step_user_already_authorized():
     hass = MagicMock()
     hass.async_add_executor_job = AsyncMock()
     hass.config.path.side_effect = lambda p: f"/mock/config/{p}"
-    data = {
-        "account": "test@gmail.com",
-        "credentials_file": "credentials.json"
-    }
-
-    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
-         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
-         patch("custom_components.gogcli.config_flow.sync_config"), \
-         patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper, \
-         patch("os.path.exists", return_value=True):
-        
-        wrapper_instance = MockWrapper.return_value
-        wrapper_instance.version = AsyncMock(return_value="gog version 1.0.0")
-        wrapper_instance.set_credentials = AsyncMock()
-        wrapper_instance.list_auth = AsyncMock(return_value='{"accounts":[{"email":"test@gmail.com"}]}')
-
-        result = await validate_input(hass, data)
-        
-        assert result["title"] == "gogcli (test@gmail.com)"
-        wrapper_instance.set_credentials.assert_called_with("/mock/config/credentials.json")
-
-@pytest.mark.asyncio
-async def test_validate_input_credentials_file_not_found():
-    hass = MagicMock()
-    hass.async_add_executor_job = AsyncMock()
-    hass.config.path.side_effect = lambda p: f"/mock/config/{p}"
-    data = {
-        "account": "test@gmail.com",
-        "credentials_file": "missing.json"
-    }
-
-    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
-         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
-         patch("custom_components.gogcli.config_flow.sync_config"), \
-         patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper, \
-         patch("os.path.exists", return_value=False):
-        
-        wrapper_instance = MockWrapper.return_value
-        wrapper_instance.version = AsyncMock(return_value="gog version 1.0.0")
-
-        with pytest.raises(CredentialsFileNotFound):
-            await validate_input(hass, data)
-
-@pytest.mark.asyncio
-async def test_validate_input_use_existing_binary():
-    hass = MagicMock()
-    hass.async_add_executor_job = AsyncMock()
-    hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
-    data = {
-        "account": "test@gmail.com"
-    }
-
-    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/existing/gog"), \
-         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
-         patch("custom_components.gogcli.config_flow.sync_config") as mock_sync, \
-         patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
-        
-        wrapper_instance = MockWrapper.return_value
-        wrapper_instance.version = AsyncMock(return_value="gog version 1.0.0")
-        wrapper_instance.list_auth = AsyncMock(return_value='{"accounts":[{"email":"test@gmail.com"}]}')
-
-        result = await validate_input(hass, data)
-        
-        assert result["title"] == "gogcli (test@gmail.com)"
-        assert result["data"][CONF_GOG_PATH] == "/existing/gog"
-        assert result["data"][CONF_CONFIG_DIR] == "/mock/config/path/.storage/gogcli"
-        
-        # Verify sync_config was scheduled
-        hass.async_add_executor_job.assert_called_with(mock_sync, hass, "/mock/config/path/.storage/gogcli")
-
-@pytest.mark.asyncio
-async def test_validate_input_install_success():
-    hass = MagicMock()
-    hass.async_add_executor_job = AsyncMock()
-    hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
-    data = {
-        "account": "test@gmail.com"
-    }
-
-    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/install/path/gog"), \
-         patch("custom_components.gogcli.config_flow.check_binary", return_value=None), \
-         patch("custom_components.gogcli.config_flow.install_binary", return_value="/install/path/gog") as mock_install, \
-         patch("custom_components.gogcli.config_flow.sync_config") as mock_sync, \
-         patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
-        
-        wrapper_instance = MockWrapper.return_value
-        wrapper_instance.version = AsyncMock(return_value="gog version 1.0.0")
-        wrapper_instance.list_auth = AsyncMock(return_value='{"accounts":[{"email":"test@gmail.com"}]}')
-
-        result = await validate_input(hass, data)
-        
-        mock_install.assert_called_once()
-        assert result["title"] == "gogcli (test@gmail.com)"
-        assert result["data"][CONF_GOG_PATH] == "/install/path/gog"
-
-@pytest.mark.asyncio
-async def test_validate_input_install_fail():
-    hass = MagicMock()
-    hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
-    data = {
-        "account": "test@gmail.com"
-    }
-
-    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/install/path/gog"), \
-         patch("custom_components.gogcli.config_flow.check_binary", return_value=None), \
-         patch("custom_components.gogcli.config_flow.install_binary", side_effect=RuntimeError("Install failed")
-        ):
-        
-        with pytest.raises(CannotConnect):
-            await validate_input(hass, data)
-
-@pytest.mark.asyncio
-async def test_validate_input_auth_failed():
-    hass = MagicMock()
-    hass.async_add_executor_job = AsyncMock()
-    hass.config.path.return_value = "/mock/config/path/.storage/gogcli"
-    data = {
-        "account": "wrong@gmail.com"
-    }
+    
+    flow = ConfigFlow()
+    flow.hass = hass
+    
+    data = {CONF_ACCOUNT: "test@gmail.com"}
 
     with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
          patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
          patch("custom_components.gogcli.config_flow.sync_config"), \
          patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
         
-        wrapper_instance = MockWrapper.return_value
-        wrapper_instance.version = AsyncMock(return_value="gog version 1.0.0")
-        wrapper_instance.list_auth = AsyncMock(return_value='{"accounts":[{"email":"other@gmail.com"}]}')
+        wrapper = MockWrapper.return_value
+        wrapper.list_auth = AsyncMock(return_value='{"accounts":[{"email":"test@gmail.com"}]}')
+        
+        # Assume unique_id check passes (mocking async_set_unique_id on flow if needed, but it's internal)
+        # We need to mock the mixin methods
+        flow.async_set_unique_id = AsyncMock()
+        flow._abort_if_unique_id_configured = MagicMock()
 
-        with pytest.raises(AccountNotAuthorized):
-            await validate_input(hass, data)
+        result = await flow.async_step_user(data)
+        
+        assert result["type"] == FlowResultType.CREATE_ENTRY
+        assert result["title"] == "gogcli (test@gmail.com)"
+
+@pytest.mark.asyncio
+async def test_step_user_needs_auth():
+    hass = MagicMock()
+    hass.async_add_executor_job = AsyncMock()
+    hass.config.path.return_value = "/mock/config/.storage/gogcli"
+    
+    flow = ConfigFlow()
+    flow.hass = hass
+    data = {CONF_ACCOUNT: "test@gmail.com"}
+
+    with patch("custom_components.gogcli.config_flow.get_binary_path", return_value="/mock/gog"), \
+         patch("custom_components.gogcli.config_flow.check_binary", return_value="1.0.0"), \
+         patch("custom_components.gogcli.config_flow.sync_config"), \
+         patch("custom_components.gogcli.config_flow.GogWrapper") as MockWrapper:
+        
+        wrapper = MockWrapper.return_value
+        wrapper.list_auth = AsyncMock(return_value='{"accounts":[]}') # Not authorized
+        wrapper.start_auth = AsyncMock()
+        
+        # Mock process stdout for URL
+        mock_process = MagicMock()
+        mock_stdout = AsyncMock()
+        # First call returns line with URL, second returns empty (EOF)
+        mock_stdout.readline.side_effect = [
+            b"Go to: https://google.com/auth\n",
+            b""
+        ]
+        mock_process.stdout = mock_stdout
+        wrapper.start_auth.return_value = mock_process
+
+        flow.async_set_unique_id = AsyncMock()
+        flow._abort_if_unique_id_configured = MagicMock()
+
+        result = await flow.async_step_user(data)
+        
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "auth"
+        assert result["description_placeholders"]["url"] == "https://google.com/auth"
+        assert flow.auth_process == mock_process
+
+@pytest.mark.asyncio
+async def test_step_auth_submit_code_success():
+    flow = ConfigFlow()
+    flow.hass = MagicMock()
+    flow.data = {CONF_ACCOUNT: "test@gmail.com"}
+    flow.config_dir = "/tmp"
+    flow.wrapper = MagicMock()
+    flow.wrapper.executable_path = "/mock/gog"
+    
+    mock_process = MagicMock()
+    # communicate returns (stdout, stderr)
+    mock_process.communicate = AsyncMock(return_value=(b"", b""))
+    mock_process.returncode = 0
+    flow.auth_process = mock_process
+    
+    user_input = {CONF_AUTH_CODE: "123456"}
+    
+    result = await flow.async_step_auth(user_input)
+    
+    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["title"] == "gogcli (test@gmail.com)"
+    mock_process.communicate.assert_called_with(input=b"123456\n")
+
+@pytest.mark.asyncio
+async def test_step_auth_submit_code_failure():
+    flow = ConfigFlow()
+    flow.hass = MagicMock()
+    flow.data = {CONF_ACCOUNT: "test@gmail.com"}
+    flow.wrapper = MagicMock() # Mock wrapper
+    
+    # Mock start_auth for retry
+    retry_process = MagicMock()
+    retry_process.stdout.readline = AsyncMock(side_effect=[b"Go to: https://retry\n", b""])
+    flow.wrapper.start_auth = AsyncMock(return_value=retry_process)
+    
+    mock_process = MagicMock()
+    mock_process.communicate = AsyncMock(return_value=(b"", b"Error: invalid code"))
+    mock_process.returncode = 1
+    flow.auth_process = mock_process
+    
+    user_input = {CONF_AUTH_CODE: "wrong"}
+    
+    result = await flow.async_step_auth(user_input)
+    
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "auth"
+    assert result["errors"]["base"] == "auth_failed"
+    assert flow.auth_process == retry_process # Should be the new process

@@ -228,3 +228,19 @@ class GogWrapper:
             return json.loads(stdout)
         except json.JSONDecodeError:
             return {}
+
+    async def start_auth(self, account: str) -> asyncio.subprocess.Process:
+        """Start the interactive auth process."""
+        env = os.environ.copy()
+        if self.config_dir:
+            env["HOME"] = self.config_dir
+            env["XDG_CONFIG_HOME"] = os.path.join(self.config_dir, ".config")
+            
+        return await asyncio.create_subprocess_exec(
+            self.executable_path,
+            "auth", "add", account,
+            env=env,
+            stdin=asyncio.subprocess.PIPE,
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE,
+        )

@@ -4,6 +4,7 @@ from __future__ import annotations
 import asyncio
 import logging
 import os
+import re
 from typing import Any
 
 import voluptuous as vol
@@ -19,6 +20,7 @@ from .const import (
     CONF_GOG_PATH, 
     CONF_CONFIG_DIR, 
     CONF_CREDENTIALS_FILE, 
+    CONF_AUTH_CODE,
     CONF_POLLING_INTERVAL, 
     DEFAULT_GOG_PATH, 
     DEFAULT_POLLING_INTERVAL, 
@@ -36,82 +38,17 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
-async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
-    """Validate the user input allows us to connect.
-
-    Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
-    """
-    account = data[CONF_ACCOUNT]
-    credentials_file = data.get(CONF_CREDENTIALS_FILE)
-    
-    # Define config directory
-    config_dir = hass.config.path(".storage/gogcli")
-
-    # Use default binary path and ensure it's installed
-    gog_path = get_binary_path(hass)
-    version = await check_binary(gog_path)
-    
-    if not version:
-        # Try to install
-        try:
-            gog_path = await install_binary(hass)
-        except Exception as err:
-            _LOGGER.error("Failed to install gogcli: %s", err)
-            raise CannotConnect
-
-    # Sync configuration
-    await hass.async_add_executor_job(sync_config, hass, config_dir)
-    
-    wrapper = GogWrapper(gog_path, config_dir)
-
-    # Check if gogcli is executable and get version
-    try:
-        await wrapper.version()
-    except (FileNotFoundError, RuntimeError) as err:
-        _LOGGER.error("gogcli version failed: %s", err)
-        raise CannotConnect
-
-    # If credentials file provided, set it
-    if credentials_file:
-        full_credentials_path = hass.config.path(credentials_file) if not os.path.isabs(credentials_file) else credentials_file
-        if not os.path.exists(full_credentials_path):
-             _LOGGER.error("Credentials file not found: %s", full_credentials_path)
-             raise CredentialsFileNotFound
-        
-        try:
-            await wrapper.set_credentials(full_credentials_path)
-        except Exception as err:
-            _LOGGER.error("Failed to set credentials: %s", err)
-            raise CannotConnect
-
-    # Check if account is authorized
-    try:
-        auth_json = await wrapper.list_auth()
-        
-        if account not in auth_json:
-             _LOGGER.error("Account %s not found in gog auth list. Available: %s", account, auth_json)
-             # We should tell the user what to do
-             raise AccountNotAuthorized(f"Run `HOME={config_dir} {gog_path} auth add {account}` in terminal")
-
-    except (CannotConnect, AccountNotAuthorized):
-        raise
-    except Exception as err:
-        _LOGGER.exception("Unexpected error validating gogcli: %s", err)
-        raise CannotConnect
-
-    return {
-        "title": f"gogcli ({account})", 
-        "data": {
-            **data, 
-            CONF_GOG_PATH: gog_path,
-            CONF_CONFIG_DIR: config_dir
-        }
-    }
-
 class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for gogcli."""
 
     VERSION = 1
+
+    def __init__(self):
+        """Initialize."""
+        self.wrapper: GogWrapper | None = None
+        self.auth_process: asyncio.subprocess.Process | None = None
+        self.config_dir: str | None = None
+        self.data: dict[str, Any] = {}
 
     @staticmethod
     @callback
@@ -130,22 +67,106 @@ class ConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(user_input[CONF_ACCOUNT])
             self._abort_if_unique_id_configured()
             
+            self.data = user_input
+            
             try:
-                info = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except AccountNotAuthorized:
-                errors["base"] = "account_not_authorized"
+                # Basic validation and setup
+                self.config_dir = self.hass.config.path(".storage/gogcli")
+                gog_path = get_binary_path(self.hass)
+                
+                # Check/Install binary
+                version = await check_binary(gog_path)
+                if not version:
+                    gog_path = await install_binary(self.hass)
+                
+                # Sync config
+                await self.hass.async_add_executor_job(sync_config, self.hass, self.config_dir)
+                
+                self.wrapper = GogWrapper(gog_path, self.config_dir)
+                
+                # Set credentials if provided
+                if creds := user_input.get(CONF_CREDENTIALS_FILE):
+                    full_path = self.hass.config.path(creds) if not os.path.isabs(creds) else creds
+                    if not os.path.exists(full_path):
+                        raise CredentialsFileNotFound
+                    await self.wrapper.set_credentials(full_path)
+
+                # Check auth status
+                auth_list = await self.wrapper.list_auth()
+                if user_input[CONF_ACCOUNT] in auth_list:
+                    return self.async_create_entry(
+                        title=f"gogcli ({user_input[CONF_ACCOUNT]})", 
+                        data={**user_input, CONF_GOG_PATH: gog_path, CONF_CONFIG_DIR: self.config_dir}
+                    )
+                
+                # Not authorized, start interactive flow
+                return await self.async_step_auth()
+
             except CredentialsFileNotFound:
                 errors["base"] = "credentials_file_not_found"
-            except Exception:  # pylint: disable=broad-except
+            except Exception:
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
-            else:
-                return self.async_create_entry(title=info["title"], data=info["data"])
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_auth(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
+        """Handle interactive authentication."""
+        errors: dict[str, str] = {}
+        
+        if user_input is not None:
+            # Send code to process
+            if self.auth_process:
+                code = user_input[CONF_AUTH_CODE] + "\n"
+                stdout, stderr = await self.auth_process.communicate(input=code.encode())
+                
+                if self.auth_process.returncode == 0:
+                     return self.async_create_entry(
+                        title=f"gogcli ({self.data[CONF_ACCOUNT]})", 
+                        data={**self.data, CONF_GOG_PATH: self.wrapper.executable_path, CONF_CONFIG_DIR: self.config_dir}
+                    )
+                else:
+                    _LOGGER.error("Auth failed: %s", stderr.decode())
+                    errors["base"] = "auth_failed"
+                    self.auth_process = None # Reset to try again
+            else:
+                 errors["base"] = "process_lost"
+
+        # Start process and get URL
+        if not self.auth_process:
+            self.auth_process = await self.wrapper.start_auth(self.data[CONF_ACCOUNT])
+            
+            # Read stdout line by line until we find the URL
+            url = None
+            while True:
+                line = await self.auth_process.stdout.readline()
+                if not line:
+                    break
+                decoded = line.decode().strip()
+                if "https://" in decoded:
+                    # Simple extraction, gogcli prints "Go to the following link in your browser:" then the link
+                    match = re.search(r'(https://[^\s]+)', decoded)
+                    if match:
+                        url = match.group(1)
+                        break
+            
+            if not url:
+                errors["base"] = "url_not_found"
+                self.auth_process.kill()
+                self.auth_process = None
+                return self.async_show_form(step_id="user", errors=errors)
+
+            self.auth_url = url
+
+        return self.async_show_form(
+            step_id="auth",
+            data_schema=vol.Schema({vol.Required(CONF_AUTH_CODE): str}),
+            description_placeholders={"url": self.auth_url},
+            errors=errors
         )
 
 class OptionsFlowHandler(config_entries.OptionsFlow):

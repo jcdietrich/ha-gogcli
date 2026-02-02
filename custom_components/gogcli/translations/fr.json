@@ -6,7 +6,13 @@
           "account": "Compte Google (Email)",
           "credentials_file": "Fichier JSON d'identifiants OAuth (chemin ou nom de fichier dans config/)"
         },
-        "description": "Entrez l'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`. Remarque : vous devez toujours autoriser le compte en exécutant la commande affichée en cas d'échec."
+        "description": "Entrez l'e-mail de votre compte Google. Vous pouvez éventuellement fournir le chemin vers votre fichier `credentials.json`."
+      },
+      "auth": {
+        "data": {
+          "auth_code": "Code d'autorisation"
+        },
+        "description": "Veuillez visiter l'URL suivante pour autoriser l'application :\n\n[Lien d'autorisation]({url})\n\nAprès autorisation, copiez le code fourni et collez-le ci-dessous."
       }
     },
     "options": {
@@ -29,10 +35,13 @@
       }
     },
     "error": {
-      "cannot_connect": "Échec de l\'exécution de gogcli. Vérifiez le chemin et les permissions.",
-      "account_not_authorized": "Compte non autorisé. Consultez les journaux pour la commande à exécuter.",
-      "credentials_file_not_found": "Fichier d\'identifiants introuvable. Vérifiez le chemin.",
-      "unknown": "Une erreur inattendue s\'est produite."
+      "cannot_connect": "Échec de l'exécution de gogcli. Vérifiez le chemin et les permissions.",
+      "account_not_authorized": "Compte non autorisé.",
+      "credentials_file_not_found": "Fichier d'identifiants introuvable. Vérifiez le chemin.",
+      "unknown": "Une erreur inattendue s'est produite.",
+      "auth_failed": "L'authentification a échoué. Vérifiez le code et réessayez.",
+      "url_not_found": "Impossible de générer l'URL d'autorisation.",
+      "process_lost": "Processus d'authentification perdu. Veuillez recommencer."
     },
     "abort": {
       "already_configured": "Le compte est déjà configuré"

@@ -6,7 +6,13 @@
           "account": "Google Account (Email)",
           "credentials_file": "OAuth Credentials JSON file (path or filename in config/)"
         },
-        "description": "Enter your Google account email. You can optionally provide the path to your `credentials.json` file. Note: You still need to authorize the account by running the command shown if it fails."
+        "description": "Enter your Google account email. You can optionally provide the path to your `credentials.json` file."
+      },
+      "auth": {
+        "data": {
+          "auth_code": "Authorization Code"
+        },
+        "description": "Please visit the following URL to authorize the application:\n\n[Authorization Link]({url})\n\nAfter authorizing, copy the code provided and paste it below."
       }
     },
     "options": {
@@ -30,9 +36,12 @@
     },
     "error": {
       "cannot_connect": "Failed to execute gogcli. Check the path and permissions.",
-      "account_not_authorized": "Account not authorized. See logs for command to run.",
+      "account_not_authorized": "Account not authorized.",
       "credentials_file_not_found": "Credentials file not found. Check the path.",
-      "unknown": "Unexpected error occurred."
+      "unknown": "Unexpected error occurred.",
+      "auth_failed": "Authentication failed. Please check the code and try again.",
+      "url_not_found": "Could not generate authorization URL.",
+      "process_lost": "Authentication process lost. Please restart the flow."
     },
     "abort": {
       "already_configured": "Account is already configured"

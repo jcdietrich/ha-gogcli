@@ -6,6 +6,7 @@ CONF_GOG_PATH = "gog_path"
 CONF_ACCOUNT = "account"
 CONF_CONFIG_DIR = "config_dir"
 CONF_CREDENTIALS_FILE = "credentials_file"
+CONF_AUTH_CODE = "auth_code"
 CONF_POLLING_INTERVAL = "polling_interval"
 
 DEFAULT_GOG_PATH = "gog"
